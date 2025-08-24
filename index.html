@@ -596,11 +596,12 @@
         }
 
         // --- ส่วนที่เพิ่มใหม่สำหรับ Background Changer และ Overlay ---
+        // แก้ไขชื่อไฟล์รูปภาพให้ถูกต้องโดยการเพิ่มคำนำหน้า 'uploaded:'
         const backgroundImages = [
-            'image1.jpg-e841d1a8-39ab-40cc-b06a-f152322e9fa4',
-            'image2.jpg-e7bce7fa-86be-4dbb-b677-039a23e71cfc',
-            'image3.jpg-a28d9021-91c8-4754-9af6-28bd7c87139f',
-            'image4.jpg-f1029cf5-9de2-490a-b16c-d1c6d22b500b'
+            'uploaded:image1.jpg-e841d1a8-39ab-40cc-b06a-f152322e9fa4',
+            'uploaded:image2.jpg-e7bce7fa-86be-4dbb-b677-039a23e71cfc',
+            'uploaded:image3.jpg-a28d9021-91c8-4754-9af6-28bd7c87139f',
+            'uploaded:image4.jpg-f1029cf5-9de2-490a-b16c-d1c6d22b500b'
         ];
         
         let currentImageIndex = -1;
@@ -650,7 +651,7 @@
                 
                 // Adjust the index after removal
                 if (currentImageIndex >= availableImages.length) {
-                    currentImageIndex = -1;
+                    currentImageIndex = -1; // Decrement index to make the next iteration start from the correct position
                 } else {
                     currentImageIndex--; // Decrement index to make the next iteration start from the correct position
                 }
@@ -674,24 +675,24 @@
 
         // Initial state on app load
         window.addEventListener('load', () => {
-              preventZoom();
-              adjustViewportHeight();
-              createButtons('player1');
-              createButtons('player2');
-              bodyElement.style.backgroundColor = '#006400';
-              // ตรวจสอบรูปภาพทั้งหมดเมื่อโหลดครั้งแรก
-              availableImages = [];
-              const checks = backgroundImages.map(url => loadImage(url)
-                  .then(loadedUrl => availableImages.push(loadedUrl))
-                  .catch(() => showMessage(`รูปภาพ ${url} ไม่พบ`))
-              );
-              Promise.all(checks).finally(() => {
+            preventZoom();
+            adjustViewportHeight();
+            createButtons('player1');
+            createButtons('player2');
+            bodyElement.style.backgroundColor = '#006400';
+            // ตรวจสอบรูปภาพทั้งหมดเมื่อโหลดครั้งแรก
+            availableImages = [];
+            const checks = backgroundImages.map(url => loadImage(url)
+                .then(loadedUrl => availableImages.push(loadedUrl))
+                .catch(() => showMessage(`รูปภาพ ${url} ไม่พบ`))
+            );
+            Promise.all(checks).finally(() => {
                 // After all checks are done, switch to the first image (if any)
                 if (availableImages.length > 0) {
                     currentImageIndex = -1; // Start from -1 so the first click shows the first image
                 }
                 showMessage(`พบรูปภาพที่ใช้งานได้ ${availableImages.length} รูป`);
-              });
+            });
         });
 
     </script>
