@@ -28,10 +28,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center; 
-            padding: 2% 5%; /* Adjusted horizontal padding to give more space on the sides */
+            padding: 2% 5%;
             box-sizing: border-box;
             position: relative;
             touch-action: manipulation;
+            
+            /* Background image settings - will be changed by JS */
+            background-image: none; /* Initial state, no image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out;
         }
         
         /* Container for each player's side */
@@ -243,7 +250,7 @@
             /* Enhanced 3D effect */
             box-shadow: 
                 0 0 10px rgba(255, 255, 255, 0.2), 
-                0 8px 15px rgba(0, 0, 0, 0.6),   
+                0 8px 15px rgba(0, 0, 0, 0.6),  
                 inset 0 0 15px rgba(0, 0, 0, 0.2); 
             
             text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
@@ -354,15 +361,45 @@
             visibility: visible;
             opacity: 1;
         }
+
+        .background-switcher {
+            position: absolute;
+            top: 2%;
+            left: 2%;
+            z-index: 20;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 2px solid white;
+            color: white;
+            padding: 1vmin 2vmin;
+            cursor: pointer;
+            border-radius: 0.5vw;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2vmin;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .background-switcher:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .background-switcher:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
+    <button id="bg-switcher" class="background-switcher">CG</button>
+
     <div class="frame-score-container">
         <div class="frame-header">FRAME</div>
         <div class="frame-score-wrapper">
-            <div class="frame-score" id="player1-frames">0</div>
+            <div class="frame-score" id="player1-frames" contenteditable="true">0</div>
             <div class="frame-separator">:</div>
-            <div class="frame-score" id="player2-frames">0</div>
+            <div class="frame-score" id="player2-frames" contenteditable="true">0</div>
         </div>
     </div>
     
@@ -477,7 +514,9 @@
         // Main function to handle score button clicks
         function handleScoreClick(scoreDisplay, ballScore, playerId) {
             // Cancel any ongoing speech to prioritize the new click
-            window.speechSynthesis.cancel();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             
             const currentScore = parseInt(scoreDisplay.textContent);
             const newScore = currentScore + ballScore;
@@ -488,22 +527,24 @@
             
             updateDiff();
 
-            // Speak the ball score first
-            const ballScoreText = `${scoreVoicesEnglish[ballScore] || ballScore.toString()}`;
-            const utteranceBallScore = new SpeechSynthesisUtterance(ballScoreText);
-            utteranceBallScore.lang = 'en-US';
-            
-            // Speak the total score after a slight delay
-            utteranceBallScore.onend = () => {
-                setTimeout(() => {
-                    const totalScoreText = newScore.toString();
-                    const utteranceTotalScore = new SpeechSynthesisUtterance(totalScoreText);
-                    utteranceTotalScore.lang = 'en-US';
-                    window.speechSynthesis.speak(utteranceTotalScore);
-                }, 500); // 500ms delay
-            };
-            
-            window.speechSynthesis.speak(utteranceBallScore);
+            if ('speechSynthesis' in window) {
+                // Speak the ball score first
+                const ballScoreText = `${scoreVoicesEnglish[ballScore] || ballScore.toString()}`;
+                const utteranceBallScore = new SpeechSynthesisUtterance(ballScoreText);
+                utteranceBallScore.lang = 'en-US';
+                
+                // Speak the total score after a slight delay
+                utteranceBallScore.onend = () => {
+                    setTimeout(() => {
+                        const totalScoreText = newScore.toString();
+                        const utteranceTotalScore = new SpeechSynthesisUtterance(totalScoreText);
+                        utteranceTotalScore.lang = 'en-US';
+                        window.speechSynthesis.speak(utteranceTotalScore);
+                    }, 500); // 500ms delay
+                };
+                
+                window.speechSynthesis.speak(utteranceBallScore);
+            }
         }
 
         // Function to create the score buttons
@@ -754,9 +795,49 @@
         
         setupNameEditing(player1NameInput);
         setupNameEditing(player2NameInput);
-        
+
         createButtons('player1');
         createButtons('player2');
+
+        // --- Dynamic Background Changer ---
+        // Array of background image URLs
+        const backgroundImages = [
+            'https://placehold.co/2160x1620/A52A2A/FFFFFF?text=CG%20Image%201',
+            'https://placehold.co/2160x1620/4CAF50/FFFFFF?text=CG%20Image%202',
+            'https://placehold.co/2160x1620/FFC0CB/FFFFFF?text=CG%20Image%203'
+        ];
+
+        let currentImageIndex = -1; // -1 represents the default green background
+        const bodyElement = document.body;
+        const switchButton = document.getElementById('bg-switcher');
+        
+        // Function to switch the background image
+        function switchBackground() {
+            currentImageIndex++;
+            if (currentImageIndex >= backgroundImages.length) {
+                // If we've gone through all the images, reset to the default green background
+                bodyElement.style.backgroundImage = 'none';
+                bodyElement.style.backgroundColor = '#006400';
+                currentImageIndex = -1;
+            } else {
+                // Otherwise, set the next image
+                bodyElement.style.backgroundImage = `url('${backgroundImages[currentImageIndex]}')`;
+                bodyElement.style.backgroundColor = 'transparent'; // This is important to allow the image to show
+            }
+        }
+        
+        // Add event listener to the background switcher button
+        switchButton.addEventListener('click', switchBackground);
+        
+        // Initial state on app load
+        window.onload = () => {
+             preventZoom();
+             adjustViewportHeight();
+             createButtons('player1');
+             createButtons('player2');
+             bodyElement.style.backgroundColor = '#006400';
+        };
+
     </script>
 </body>
 </html>
