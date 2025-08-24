@@ -41,6 +41,20 @@
             transition: background-image 0.5s ease-in-out;
         }
         
+        /* New overlay div to add a semi-transparent green layer on top of the background image */
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 100, 0, 0.8); /* Semi-transparent dark green, adjusted opacity to 0.8 */
+            z-index: 5; /* Place it on top of the background but below the scoreboard elements */
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none; /* Allows clicks to pass through to elements below */
+            display: none; /* Hidden by default until an image is loaded */
+        }
+        
         /* Container for each player's side */
         .player-side-container {
             display: flex;
@@ -50,6 +64,7 @@
             width: 35%; 
             text-align: center;
             padding: 0;
+            z-index: 10;
         }
         
         .player-side-container > * {
@@ -67,6 +82,7 @@
             align-items: center;
             justify-content: space-between;
             text-align: center;
+            z-index: 10;
         }
 
         /* Group for Frame Score */
@@ -250,7 +266,7 @@
             /* Enhanced 3D effect */
             box-shadow: 
                 0 0 10px rgba(255, 255, 255, 0.2), 
-                0 8px 15px rgba(0, 0, 0, 0.6),  
+                0 8px 15px rgba(0, 0, 0, 0.6), 
                 inset 0 0 15px rgba(0, 0, 0, 0.2); 
             
             text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
@@ -392,6 +408,7 @@
     </style>
 </head>
 <body>
+    <div class="background-overlay" id="background-overlay"></div>
     <button id="bg-switcher" class="background-switcher">CG</button>
 
     <div class="frame-score-container">
@@ -578,49 +595,83 @@
             }
         }
 
-        // --- Sound Generation Functions (UPDATED) ---
-        let audioContext;
-        function getAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            return audioContext;
-        }
-
-        // --- ส่วนที่เพิ่มใหม่สำหรับ Background Changer ---
+        // --- ส่วนที่เพิ่มใหม่สำหรับ Background Changer และ Overlay ---
         const backgroundImages = [
-            'image1.jpg',
-            'image2.jpg',
-            'image3.jpg',
-            'image4.jpg',
-            'image5.jpg',
-            'image6.jpg'
+            'image1.jpg-e841d1a8-39ab-40cc-b06a-f152322e9fa4',
+            'image2.jpg-e7bce7fa-86be-4dbb-b677-039a23e71cfc',
+            'image3.jpg-a28d9021-91c8-4754-9af6-28bd7c87139f',
+            'image4.jpg-f1029cf5-9de2-490a-b16c-d1c6d22b500b'
         ];
         
-        // Index to keep track of the current image
-        let currentImageIndex = -1; // -1 represents the default green background
-
+        let currentImageIndex = -1;
+        let availableImages = [...backgroundImages];
         const bodyElement = document.body;
         const switchButton = document.getElementById('bg-switcher');
+        const overlayElement = document.getElementById('background-overlay');
+
+        // Function to check and load an image
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(url);
+                img.onerror = () => reject(url);
+                img.src = url;
+            });
+        }
         
         // Function to switch the background image
-        function switchBackground() {
-            currentImageIndex++;
-            if (currentImageIndex >= backgroundImages.length) {
-                // If we've gone through all the images, reset to the default green background
+        async function switchBackground() {
+            if (availableImages.length === 0) {
+                // If there are no images left, reset to the default green background
                 bodyElement.style.backgroundImage = 'none';
                 bodyElement.style.backgroundColor = '#006400';
+                overlayElement.style.display = 'none'; // Hide the overlay
                 currentImageIndex = -1;
-            } else {
-                // Otherwise, set the next image, assuming they are in a "Backgroud" folder
-                bodyElement.style.backgroundImage = `url('Backgroud/${backgroundImages[currentImageIndex]}')`;
-                bodyElement.style.backgroundColor = 'transparent'; // This is important to allow the image to show
+                showMessage("ไม่พบรูปภาพอื่น ๆ");
+                return;
+            }
+
+            currentImageIndex = (currentImageIndex + 1) % availableImages.length;
+            const imageUrl = availableImages[currentImageIndex];
+            
+            try {
+                const loadedUrl = await loadImage(imageUrl);
+                bodyElement.style.backgroundImage = `url('${loadedUrl}')`;
+                bodyElement.style.backgroundColor = 'transparent';
+                overlayElement.style.display = 'block'; // Show the overlay
+                showMessage("กำลังเปลี่ยนพื้นหลัง...");
+            } catch (errorUrl) {
+                console.error(`Error loading image: ${errorUrl}`);
+                // If the image fails to load, remove it from the array and try the next one
+                const indexToRemove = availableImages.indexOf(errorUrl);
+                if (indexToRemove > -1) {
+                    availableImages.splice(indexToRemove, 1);
+                }
+                
+                // Adjust the index after removal
+                if (currentImageIndex >= availableImages.length) {
+                    currentImageIndex = -1;
+                } else {
+                    currentImageIndex--; // Decrement index to make the next iteration start from the correct position
+                }
+                
+                showMessage("รูปภาพนี้ไม่สามารถโหลดได้ กำลังข้ามไป...");
+                switchBackground(); // Try switching to a new image immediately
             }
         }
         
         // Add event listener to the background switcher button
         switchButton.addEventListener('click', switchBackground);
         
+        function showMessage(msg) {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = msg;
+            msgBox.classList.add('show');
+            setTimeout(() => {
+                msgBox.classList.remove('show');
+            }, 2000);
+        }
+
         // Initial state on app load
         window.addEventListener('load', () => {
               preventZoom();
@@ -628,6 +679,19 @@
               createButtons('player1');
               createButtons('player2');
               bodyElement.style.backgroundColor = '#006400';
+              // ตรวจสอบรูปภาพทั้งหมดเมื่อโหลดครั้งแรก
+              availableImages = [];
+              const checks = backgroundImages.map(url => loadImage(url)
+                  .then(loadedUrl => availableImages.push(loadedUrl))
+                  .catch(() => showMessage(`รูปภาพ ${url} ไม่พบ`))
+              );
+              Promise.all(checks).finally(() => {
+                // After all checks are done, switch to the first image (if any)
+                if (availableImages.length > 0) {
+                    currentImageIndex = -1; // Start from -1 so the first click shows the first image
+                }
+                showMessage(`พบรูปภาพที่ใช้งานได้ ${availableImages.length} รูป`);
+              });
         });
 
     </script>
