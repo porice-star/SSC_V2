@@ -28,7 +28,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center; 
-            padding: 2% 2%; /* Adjusted padding as per the user's request */
+            padding: 2% 2%; 
             box-sizing: border-box;
             position: relative;
             touch-action: manipulation;
@@ -40,10 +40,9 @@
             flex-direction: column;
             justify-content: space-between; 
             align-items: center;
-            width: 35%; /* Reduced spacing by increasing width from 30% to 35% */
+            width: 35%; 
             text-align: center;
             padding: 0;
-            /* Replaced gap with margin for better compatibility */
         }
         
         .player-side-container > * {
@@ -92,11 +91,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Replaced gap with margin for better compatibility */
         }
         
         .frame-score-wrapper > * {
-            margin: 0 2vw; /* Use horizontal margin instead of gap */
+            margin: 0 2vw; 
         }
 
         .frame-score {
@@ -144,7 +142,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* Replaced gap with margin for better compatibility */
             margin-top: 25vh;
         }
         
@@ -157,7 +154,7 @@
         }
 
         .player-name {
-            font-size: 5.28vmin; /* Increased from 4.4vmin by 20% */
+            font-size: 5.28vmin; 
             font-weight: bold;
             color: #FFFFFF;
             width: 100%;
@@ -183,20 +180,25 @@
             color: #FF0000;
         }
 
+        /* Container to fix the score display area height */
+        .player-score-container {
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            width: 100%;
+            height: 55vh; /* Fixed height to prevent button shifting */
+        }
+
         .player-score {
             font-size: 63.05vmin;
             font-weight: normal;
             text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
             color: #00FFFF;
             line-height: 0.8;
-            display: flex;
-            align-items: center; 
-            justify-content: center; 
-            width: 100%;
-            height: auto;
             transition: font-size 0.2s ease;
         }
-
+        
+        /* New CSS class to adjust font size for three-digit scores */
         .player-score.three-digit {
             font-size: 45vmin;
         }
@@ -207,7 +209,6 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            /* Replaced gap with margin for better compatibility */
             margin-bottom: 3vh;
         }
         
@@ -216,7 +217,6 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            /* Replaced gap with margin for better compatibility */
         }
         
         .score-buttons-row > * {
@@ -264,7 +264,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Replaced gap with margin for better compatibility */
         }
 
         .action-buttons-container > * {
@@ -369,7 +368,9 @@
     
     <div class="player-side-container">
         <input type="text" class="player-name" id="player1-name" maxlength="10" placeholder="Player 1" value="PLAYER 1">
-        <div class="player-score" id="player1-score">0</div>
+        <div class="player-score-container">
+            <div class="player-score" id="player1-score">0</div>
+        </div>
         <div class="score-buttons" id="player1-buttons"></div>
     </div>
 
@@ -387,7 +388,9 @@
     
     <div class="player-side-container">
         <input type="text" class="player-name" id="player2-name" maxlength="10" placeholder="Player 2" value="PLAYER 2">
-        <div class="player-score" id="player2-score">0</div>
+        <div class="player-score-container">
+            <div class="player-score" id="player2-score">0</div>
+        </div>
         <div class="score-buttons" id="player2-buttons"></div>
     </div>
     
@@ -447,6 +450,8 @@
         // Function to update the score display
         function updateScoreDisplay(scoreElement, newScore) {
             scoreElement.textContent = newScore;
+            
+            // Check if the score is 3 digits or more and adjust font size
             if (String(newScore).length >= 3) {
                 scoreElement.classList.add('three-digit');
             } else {
