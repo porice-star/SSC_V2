@@ -800,11 +800,12 @@
         createButtons('player2');
 
         // --- Dynamic Background Changer ---
-        // Array of background image URLs
+        // Array of background image URLs from the 'Background' folder
+        // UPDATED: Use the correct file names for the uploaded images
         const backgroundImages = [
-            'https://placehold.co/2160x1620/A52A2A/FFFFFF?text=CG%20Image%201',
-            'https://placehold.co/2160x1620/4CAF50/FFFFFF?text=CG%20Image%202',
-            'https://placehold.co/2160x1620/FFC0CB/FFFFFF?text=CG%20Image%203'
+            'uploaded:image_3d9f9a.png-31c2b2da-4017-42ab-914b-72dda7f40f17',
+            'uploaded:image_3f0b20.png-191775ea-8983-4ba9-9b8e-9792fedda893',
+            'uploaded:image_3d9bd8.png-c8afaf1f-d437-4125-a47d-055ae90b46de'
         ];
 
         let currentImageIndex = -1; // -1 represents the default green background
@@ -831,11 +832,11 @@
         
         // Initial state on app load
         window.onload = () => {
-             preventZoom();
-             adjustViewportHeight();
-             createButtons('player1');
-             createButtons('player2');
-             bodyElement.style.backgroundColor = '#006400';
+              preventZoom();
+              adjustViewportHeight();
+              createButtons('player1');
+              createButtons('player2');
+              bodyElement.style.backgroundColor = '#006400';
         };
 
     </script>
