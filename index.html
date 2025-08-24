@@ -243,7 +243,7 @@
             /* Enhanced 3D effect */
             box-shadow: 
                 0 0 10px rgba(255, 255, 255, 0.2), 
-                0 8px 15px rgba(0, 0, 0, 0.6),      
+                0 8px 15px rgba(0, 0, 0, 0.6),   
                 inset 0 0 15px rgba(0, 0, 0, 0.2); 
             
             text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
@@ -539,8 +539,106 @@
             }
         }
         
+        // --- Sound Generation Functions (UPDATED) ---
+        let audioContext;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        /**
+         * Plays a short, percussive sound.
+         * @param {number} frequency - The frequency of the sound in Hz.
+         * @param {number} duration - The duration of the sound in seconds.
+         * @param {string} type - The waveform type (e.g., 'sine', 'square').
+         */
+        function playPercussion(frequency, duration, type = 'sine') {
+            const context = getAudioContext();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+
+            // Use an ADSR envelope to make it sound more like a tap or thud
+            gainNode.gain.setValueAtTime(0.8, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start(0);
+            oscillator.stop(context.currentTime + duration);
+        }
+
+        /**
+         * Plays a triumphant, celebratory sound.
+         */
+        function playFinishSound() {
+            const context = getAudioContext();
+            const now = context.currentTime;
+
+            // Triumphant chord: C-E-G
+            const notes = [
+                { freq: 523.25, time: now, duration: 0.2 }, // C5
+                { freq: 659.25, time: now + 0.1, duration: 0.2 }, // E5
+                { freq: 783.99, time: now + 0.2, duration: 0.3 }  // G5
+            ];
+
+            notes.forEach(note => {
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+                oscillator.type = 'triangle';
+                oscillator.frequency.value = note.freq;
+
+                gainNode.gain.setValueAtTime(0.5, note.time);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, note.time + note.duration);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+
+                oscillator.start(note.time);
+                oscillator.stop(note.time + note.duration);
+            });
+        }
+
+        /**
+         * Plays a clear, simple reset sound.
+         */
+        function playSetZeroSound() {
+            playPercussion(150, 0.1, 'square'); // A low, brief square wave for a percussive feel
+        }
+        
+        /**
+         * Plays a quick, descending "undo" sound.
+         */
+        function playUndoSound() {
+            const context = getAudioContext();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(440, context.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(180, context.currentTime + 0.25);
+
+            gainNode.gain.setValueAtTime(0.5, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start(0);
+            oscillator.stop(context.currentTime + 0.25);
+        }
+
+        // --- Button Event Listeners (UPDATED) ---
+
         // "Finish" button handler
         document.querySelector('.finish-button').onclick = () => {
+            playFinishSound(); // Play sound
             const score1 = parseInt(document.getElementById('player1-score').textContent);
             const score2 = parseInt(document.getElementById('player2-score').textContent);
             const frames1 = parseInt(document.getElementById('player1-frames').textContent);
@@ -564,7 +662,6 @@
                 winnerName = document.getElementById('player2-name').value;
             }
             
-            // No TTS for action buttons
             updateScoreDisplay(document.getElementById('player1-score'), 0);
             updateScoreDisplay(document.getElementById('player2-score'), 0);
             updateDiff();
@@ -574,17 +671,18 @@
         
         // "Set Zero" button handler
         document.querySelector('.set-zero-button').onclick = () => {
+            playSetZeroSound(); // Play sound
             updateScoreDisplay(document.getElementById('player1-score'), 0);
             updateScoreDisplay(document.getElementById('player2-score'), 0);
             updateDiff();
             scoreHistory = [];
             createButtons('player1');
             createButtons('player2');
-            // No TTS for action buttons
         };
 
         // "Undo" button handler
         document.querySelector('.undo-button').onclick = () => {
+            playUndoSound(); // Play sound
             if (scoreHistory.length > 0) {
                 const lastMove = scoreHistory.pop();
                 
@@ -600,7 +698,6 @@
                 createButtons('player1');
                 createButtons('player2');
             }
-            // No TTS for action buttons
         };
 
         const player1Frames = document.getElementById('player1-frames');
