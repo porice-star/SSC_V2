@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -432,12 +432,10 @@
     </div>
     
     <div id="message-box" class="message-box"></div>
-
     <script>
         // Function to prevent double-tap zoom on mobile devices
         function preventZoom() {
             let lastTouchEnd = 0;
-            
             document.addEventListener('touchend', function (event) {
                 const now = (new Date()).getTime();
                 if (now - lastTouchEnd <= 300) {
@@ -445,19 +443,16 @@
                 }
                 lastTouchEnd = now;
             }, false);
-
             document.addEventListener('touchmove', function (event) {
                 if (event.touches.length > 1) {
                     event.preventDefault();
                 }
             }, { passive: false });
-
             document.addEventListener('dblclick', function (event) {
                 event.preventDefault();
             }, false);
         }
-
-        window.onload = preventZoom;
+        
 
         // Snooker ball scores data
         const ballScores = [
@@ -479,7 +474,6 @@
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
-
         window.addEventListener('load', adjustViewportHeight);
         window.addEventListener('resize', adjustViewportHeight);
         adjustViewportHeight();
@@ -487,7 +481,6 @@
         // Function to update the score display
         function updateScoreDisplay(scoreElement, newScore) {
             scoreElement.textContent = newScore;
-            
             // Check if the score is 3 digits or more and adjust font size
             if (String(newScore).length >= 3) {
                 scoreElement.classList.add('three-digit');
@@ -503,12 +496,19 @@
             const diff = Math.abs(score1 - score2);
             document.getElementById('diff-score').textContent = diff;
         }
-        
+
         // --- Text-to-Speech (TTS) usage ---
         // A mapping of ball scores to their spoken English words.
         const scoreVoicesEnglish = {
-            1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 
-            6: 'Six', 7: 'Seven', 8: 'Eight', 10: 'Ten'
+            1: 'One',
+            2: 'Two',
+            3: 'Three',
+            4: 'Four',
+            5: 'Five',
+            6: 'Six',
+            7: 'Seven',
+            8: 'Eight',
+            10: 'Ten'
         };
 
         // Main function to handle score button clicks
@@ -517,14 +517,11 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
             }
-            
+
             const currentScore = parseInt(scoreDisplay.textContent);
             const newScore = currentScore + ballScore;
-            
             updateScoreDisplay(scoreDisplay, newScore);
-            
             scoreHistory.push({ type: 'score', player: playerId, score: ballScore, oldScore: currentScore });
-            
             updateDiff();
 
             if ('speechSynthesis' in window) {
@@ -532,7 +529,7 @@
                 const ballScoreText = `${scoreVoicesEnglish[ballScore] || ballScore.toString()}`;
                 const utteranceBallScore = new SpeechSynthesisUtterance(ballScoreText);
                 utteranceBallScore.lang = 'en-US';
-                
+
                 // Speak the total score after a slight delay
                 utteranceBallScore.onend = () => {
                     setTimeout(() => {
@@ -542,7 +539,6 @@
                         window.speechSynthesis.speak(utteranceTotalScore);
                     }, 500); // 500ms delay
                 };
-                
                 window.speechSynthesis.speak(utteranceBallScore);
             }
         }
@@ -551,17 +547,14 @@
         function createButtons(playerId) {
             const buttonsContainer = document.getElementById(playerId + '-buttons');
             const scoreDisplay = document.getElementById(playerId + '-score');
-            
-            buttonsContainer.innerHTML = ''; 
-            
+            buttonsContainer.innerHTML = '';
             const firstRow = document.createElement('div');
             firstRow.className = 'score-buttons-row';
             buttonsContainer.appendChild(firstRow);
-
             const secondRow = document.createElement('div');
             secondRow.className = 'score-buttons-row';
             buttonsContainer.appendChild(secondRow);
-            
+
             for (let i = 0; i < 5; i++) {
                 const ball = ballScores[i];
                 const button = document.createElement('div');
@@ -584,10 +577,9 @@
                 secondRow.appendChild(button);
             }
         }
-        
+
         // --- Sound Generation Functions (UPDATED) ---
         let audioContext;
-
         function getAudioContext() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -595,220 +587,19 @@
             return audioContext;
         }
 
-        /**
-         * Plays a short, percussive sound.
-         * @param {number} frequency - The frequency of the sound in Hz.
-         * @param {number} duration - The duration of the sound in seconds.
-         * @param {string} type - The waveform type (e.g., 'sine', 'square').
-         */
-        function playPercussion(frequency, duration, type = 'sine') {
-            const context = getAudioContext();
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-
-            oscillator.type = type;
-            oscillator.frequency.value = frequency;
-
-            // Use an ADSR envelope to make it sound more like a tap or thud
-            gainNode.gain.setValueAtTime(0.8, context.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-
-            oscillator.start(0);
-            oscillator.stop(context.currentTime + duration);
-        }
-
-        /**
-         * Plays a triumphant, celebratory sound.
-         */
-        function playFinishSound() {
-            const context = getAudioContext();
-            const now = context.currentTime;
-
-            // Triumphant chord: C-E-G
-            const notes = [
-                { freq: 523.25, time: now, duration: 0.2 }, // C5
-                { freq: 659.25, time: now + 0.1, duration: 0.2 }, // E5
-                { freq: 783.99, time: now + 0.2, duration: 0.3 }  // G5
-            ];
-
-            notes.forEach(note => {
-                const oscillator = context.createOscillator();
-                const gainNode = context.createGain();
-                oscillator.type = 'triangle';
-                oscillator.frequency.value = note.freq;
-
-                gainNode.gain.setValueAtTime(0.5, note.time);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, note.time + note.duration);
-
-                oscillator.connect(gainNode);
-                gainNode.connect(context.destination);
-
-                oscillator.start(note.time);
-                oscillator.stop(note.time + note.duration);
-            });
-        }
-
-        /**
-         * Plays a clear, simple reset sound.
-         */
-        function playSetZeroSound() {
-            playPercussion(150, 0.1, 'square'); // A low, brief square wave for a percussive feel
-        }
-        
-        /**
-         * Plays a quick, descending "undo" sound.
-         */
-        function playUndoSound() {
-            const context = getAudioContext();
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(440, context.currentTime);
-            oscillator.frequency.linearRampToValueAtTime(180, context.currentTime + 0.25);
-
-            gainNode.gain.setValueAtTime(0.5, context.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-
-            oscillator.start(0);
-            oscillator.stop(context.currentTime + 0.25);
-        }
-
-        // --- Button Event Listeners (UPDATED) ---
-
-        // "Finish" button handler
-        document.querySelector('.finish-button').onclick = () => {
-            playFinishSound(); // Play sound
-            const score1 = parseInt(document.getElementById('player1-score').textContent);
-            const score2 = parseInt(document.getElementById('player2-score').textContent);
-            const frames1 = parseInt(document.getElementById('player1-frames').textContent);
-            const frames2 = parseInt(document.getElementById('player2-frames').textContent);
-
-            scoreHistory.push({ type: 'finish', score1: score1, score2: score2, frames1: frames1, frames2: frames2 });
-
-            let winnerName = '';
-            let newFrames1 = frames1;
-            let newFrames2 = frames2;
-
-            if (score1 > score2) {
-                const frameScoreElement = document.getElementById('player1-frames');
-                newFrames1 = parseInt(frameScoreElement.textContent) + 1;
-                frameScoreElement.textContent = newFrames1;
-                winnerName = document.getElementById('player1-name').value;
-            } else if (score2 > score1) {
-                const frameScoreElement = document.getElementById('player2-frames');
-                newFrames2 = parseInt(frameScoreElement.textContent) + 1;
-                frameScoreElement.textContent = newFrames2;
-                winnerName = document.getElementById('player2-name').value;
-            }
-            
-            updateScoreDisplay(document.getElementById('player1-score'), 0);
-            updateScoreDisplay(document.getElementById('player2-score'), 0);
-            updateDiff();
-            createButtons('player1');
-            createButtons('player2');
-        };
-        
-        // "Set Zero" button handler
-        document.querySelector('.set-zero-button').onclick = () => {
-            playSetZeroSound(); // Play sound
-            updateScoreDisplay(document.getElementById('player1-score'), 0);
-            updateScoreDisplay(document.getElementById('player2-score'), 0);
-            updateDiff();
-            scoreHistory = [];
-            createButtons('player1');
-            createButtons('player2');
-        };
-
-        // "Undo" button handler
-        document.querySelector('.undo-button').onclick = () => {
-            playUndoSound(); // Play sound
-            if (scoreHistory.length > 0) {
-                const lastMove = scoreHistory.pop();
-                
-                if (lastMove.type === 'finish') {
-                    updateScoreDisplay(document.getElementById('player1-score'), lastMove.score1);
-                    updateScoreDisplay(document.getElementById('player2-score'), lastMove.score2);
-                    document.getElementById('player1-frames').textContent = lastMove.frames1;
-                    document.getElementById('player2-frames').textContent = lastMove.frames2;
-                } else {
-                    updateScoreDisplay(document.getElementById(lastMove.player + '-score'), lastMove.oldScore);
-                }
-                updateDiff();
-                createButtons('player1');
-                createButtons('player2');
-            }
-        };
-
-        const player1Frames = document.getElementById('player1-frames');
-        const player2Frames = document.getElementById('player2-frames');
-        const player1NameInput = document.getElementById('player1-name');
-        const player2NameInput = document.getElementById('player2-name');
-
-        // Function to make the frame score editable
-        function setupEditable(element) {
-            element.contentEditable = true;
-            element.addEventListener('focus', () => {
-                element.classList.add('editing');
-                const range = document.createRange();
-                range.selectNodeContents(element);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-            });
-            element.addEventListener('blur', () => {
-                element.classList.remove('editing');
-            });
-            element.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    element.blur();
-                }
-            });
-        }
-        
-        setupEditable(player1Frames);
-        setupEditable(player2Frames);
-
-        // Function to make player names editable
-        function setupNameEditing(element) {
-            element.addEventListener('focus', () => {
-                element.classList.add('editing');
-                element.select();
-            });
-            element.addEventListener('blur', () => {
-                element.classList.remove('editing');
-            });
-            element.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    element.blur();
-                }
-            });
-        }
-        
-        setupNameEditing(player1NameInput);
-        setupNameEditing(player2NameInput);
-
-        createButtons('player1');
-        createButtons('player2');
-
-        // --- Dynamic Background Changer ---
-        // Array of background image URLs from the 'Background' folder
-        // UPDATED: Use the correct file names for the uploaded images
+        // --- ส่วนที่เพิ่มใหม่สำหรับ Background Changer ---
         const backgroundImages = [
-            'uploaded:image_3d9f9a.png-31c2b2da-4017-42ab-914b-72dda7f40f17',
-            'uploaded:image_3f0b20.png-191775ea-8983-4ba9-9b8e-9792fedda893',
-            'uploaded:image_3d9bd8.png-c8afaf1f-d437-4125-a47d-055ae90b46de'
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg',
+            'image5.jpg',
+            'image6.jpg'
         ];
-
+        
+        // Index to keep track of the current image
         let currentImageIndex = -1; // -1 represents the default green background
+
         const bodyElement = document.body;
         const switchButton = document.getElementById('bg-switcher');
         
@@ -821,8 +612,8 @@
                 bodyElement.style.backgroundColor = '#006400';
                 currentImageIndex = -1;
             } else {
-                // Otherwise, set the next image
-                bodyElement.style.backgroundImage = `url('${backgroundImages[currentImageIndex]}')`;
+                // Otherwise, set the next image, assuming they are in a "Background" folder
+                bodyElement.style.backgroundImage = `url('Background/${backgroundImages[currentImageIndex]}')`;
                 bodyElement.style.backgroundColor = 'transparent'; // This is important to allow the image to show
             }
         }
@@ -831,13 +622,13 @@
         switchButton.addEventListener('click', switchBackground);
         
         // Initial state on app load
-        window.onload = () => {
+        window.addEventListener('load', () => {
               preventZoom();
               adjustViewportHeight();
               createButtons('player1');
               createButtons('player2');
               bodyElement.style.backgroundColor = '#006400';
-        };
+        });
 
     </script>
 </body>
