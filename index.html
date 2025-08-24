@@ -594,70 +594,69 @@
                 secondRow.appendChild(button);
             }
         }
-
-        // --- ส่วนที่เพิ่มใหม่สำหรับ Background Changer และ Overlay ---
-        // แก้ไขชื่อไฟล์รูปภาพให้ถูกต้องโดยการเพิ่มคำนำหน้า 'uploaded:'
+        
+        // --- ส่วนที่แก้ไขสำหรับ Background Changer และ Overlay ---
+        // ใช้ชื่อไฟล์ที่ถูกต้องที่ผู้ใช้ได้อัปโหลด
         const backgroundImages = [
-            'uploaded:image1.jpg-e841d1a8-39ab-40cc-b06a-f152322e9fa4',
-            'uploaded:image2.jpg-e7bce7fa-86be-4dbb-b677-039a23e71cfc',
-            'uploaded:image3.jpg-a28d9021-91c8-4754-9af6-28bd7c87139f',
-            'uploaded:image4.jpg-f1029cf5-9de2-490a-b16c-d1c6d22b500b'
+            'uploaded:image6.jpg-ef608a01-532a-4c0e-ba24-3386fa97e24d',
+            'uploaded:image_3d9bd8.png-c8afaf1f-d437-4125-a47d-055ae90b46de',
+            'uploaded:image_3d9f9a.png-31c2b2da-4017-42ab-914b-72dda7f40f17',
+            'uploaded:image_3f0b20.png-191775ea-8983-4ba9-9b8e-9792fedda893',
+            'uploaded:image5.jpg-a48828f0-c4ef-4eac-a938-9f97049a58ce',
+            'uploaded:image_3cb9fe.png-901bc730-01c6-4d63-84e9-ffd5ad831198',
+            'uploaded:image_3ca337.png-520016ad-6b40-4b81-9e31-3bc04ee71b0a',
+            'uploaded:image_32aeb2.png-14d6683a-77c2-441c-82f8-a70e2268bf23',
+            'uploaded:image_32aaf1.png-8ff57c74-1acb-4af0-8366-b834ce08e54c'
         ];
         
-        let currentImageIndex = -1;
-        let availableImages = [...backgroundImages];
+        let currentImageIndex = -1; // -1 represents the default green background
         const bodyElement = document.body;
         const switchButton = document.getElementById('bg-switcher');
         const overlayElement = document.getElementById('background-overlay');
-
-        // Function to check and load an image
-        function loadImage(url) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(url);
-                img.onerror = () => reject(url);
-                img.src = url;
-            });
-        }
         
         // Function to switch the background image
-        async function switchBackground() {
-            if (availableImages.length === 0) {
-                // If there are no images left, reset to the default green background
+        function switchBackground() {
+            currentImageIndex++;
+            if (currentImageIndex >= backgroundImages.length) {
+                // If we've gone through all the images, reset to the default green background
                 bodyElement.style.backgroundImage = 'none';
                 bodyElement.style.backgroundColor = '#006400';
                 overlayElement.style.display = 'none'; // Hide the overlay
                 currentImageIndex = -1;
-                showMessage("ไม่พบรูปภาพอื่น ๆ");
-                return;
-            }
+            } else {
+                const imageUrl = backgroundImages[currentImageIndex];
+                const tempImage = new Image();
+                
+                tempImage.onload = () => {
+                    // When the image is successfully loaded, set it as the background
+                    bodyElement.style.backgroundImage = `url('${imageUrl}')`;
+                    bodyElement.style.backgroundColor = 'transparent'; // Allow the image to show
+                    overlayElement.style.display = 'block'; // Show the overlay
+                    showMessage("เปลี่ยนพื้นหลังสำเร็จ!");
+                };
+                
+                tempImage.onerror = () => {
+                    // If the image fails to load, remove it from the array and try the next one
+                    console.error(`Error loading image: ${imageUrl}`);
+                    backgroundImages.splice(currentImageIndex, 1);
+                    currentImageIndex--; // Adjust the index for the next call
+                    showMessage("รูปภาพนี้ไม่สามารถโหลดได้ กำลังข้ามไป...");
+                    
+                    // Immediately try the next image
+                    if (backgroundImages.length > 0) {
+                        switchBackground();
+                    } else {
+                        // If no more images are available, reset to default
+                        bodyElement.style.backgroundImage = 'none';
+                        bodyElement.style.backgroundColor = '#006400';
+                        overlayElement.style.display = 'none';
+                        currentImageIndex = -1;
+                        showMessage("ไม่พบรูปภาพอื่น ๆ");
+                    }
+                };
 
-            currentImageIndex = (currentImageIndex + 1) % availableImages.length;
-            const imageUrl = availableImages[currentImageIndex];
-            
-            try {
-                const loadedUrl = await loadImage(imageUrl);
-                bodyElement.style.backgroundImage = `url('${loadedUrl}')`;
-                bodyElement.style.backgroundColor = 'transparent';
-                overlayElement.style.display = 'block'; // Show the overlay
-                showMessage("กำลังเปลี่ยนพื้นหลัง...");
-            } catch (errorUrl) {
-                console.error(`Error loading image: ${errorUrl}`);
-                // If the image fails to load, remove it from the array and try the next one
-                const indexToRemove = availableImages.indexOf(errorUrl);
-                if (indexToRemove > -1) {
-                    availableImages.splice(indexToRemove, 1);
-                }
-                
-                // Adjust the index after removal
-                if (currentImageIndex >= availableImages.length) {
-                    currentImageIndex = -1; // Decrement index to make the next iteration start from the correct position
-                } else {
-                    currentImageIndex--; // Decrement index to make the next iteration start from the correct position
-                }
-                
-                showMessage("รูปภาพนี้ไม่สามารถโหลดได้ กำลังข้ามไป...");
-                switchBackground(); // Try switching to a new image immediately
+                // Start loading the image
+                tempImage.src = imageUrl;
             }
         }
         
@@ -674,26 +673,13 @@
         }
 
         // Initial state on app load
-        window.addEventListener('load', () => {
+        window.onload = () => {
             preventZoom();
             adjustViewportHeight();
             createButtons('player1');
             createButtons('player2');
             bodyElement.style.backgroundColor = '#006400';
-            // ตรวจสอบรูปภาพทั้งหมดเมื่อโหลดครั้งแรก
-            availableImages = [];
-            const checks = backgroundImages.map(url => loadImage(url)
-                .then(loadedUrl => availableImages.push(loadedUrl))
-                .catch(() => showMessage(`รูปภาพ ${url} ไม่พบ`))
-            );
-            Promise.all(checks).finally(() => {
-                // After all checks are done, switch to the first image (if any)
-                if (availableImages.length > 0) {
-                    currentImageIndex = -1; // Start from -1 so the first click shows the first image
-                }
-                showMessage(`พบรูปภาพที่ใช้งานได้ ${availableImages.length} รูป`);
-            });
-        });
+        };
 
     </script>
 </body>
