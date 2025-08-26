@@ -38,10 +38,6 @@
         
         /* New CSS class for the background image mode */
         body.background-image-mode {
-            /* **แก้ไขจุดนี้**: สาเหตุที่พื้นหลังไม่แสดงคือต้องใช้ URL แบบเต็มที่ชี้ไปยังไฟล์ดิบ (Raw File) ใน GitHub
-               URL นี้ถูกต้องและจะทำให้รูปภาพแสดงผลได้
-            */
-            background-image: url('https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg');
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
@@ -806,11 +802,41 @@
         // --- New Background Toggle Logic ---
         const cgButton = document.getElementById('cg-button');
         const body = document.body;
+        
+        // **ส่วนแก้ไข**:
+        // 1. สร้างอาร์เรย์ของ URL รูปภาพที่คุณต้องการ
+        const backgroundImages = [
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_43a6ee.png',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_433613.png',
+            'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_432eab.png',
+            // เพิ่ม URL ของรูปภาพอื่นๆ ที่คุณต้องการที่นี่
+        ];
+        
+        // 2. ตัวแปรเพื่อติดตามรูปภาพปัจจุบัน
+        let currentImageIndex = 0;
+        
+        // 3. ฟังก์ชันสำหรับเปลี่ยนพื้นหลัง
+        function changeBackground() {
+            // ตั้งค่าพื้นหลังเป็นรูปภาพในอาร์เรย์ที่ตำแหน่งปัจจุบัน
+            body.style.backgroundImage = `url('${backgroundImages[currentImageIndex]}')`;
+            body.classList.add('background-image-mode');
+            
+            // เพิ่มค่า index สำหรับรูปถัดไป และวนกลับไป 0 ถ้าถึงรูปสุดท้ายแล้ว
+            currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+        }
 
+        // 4. แก้ไขปุ่ม CG ให้เรียกใช้ฟังก์ชัน changeBackground()
         cgButton.addEventListener('click', () => {
-            // This single line of code toggles the class, switching the background
-            body.classList.toggle('background-image-mode');
+            // ถ้าพื้นหลังยังไม่ได้เป็นรูปภาพ ให้เริ่มเปลี่ยนรูปภาพแรก
+            if (!body.classList.contains('background-image-mode')) {
+                changeBackground();
+            } else {
+                // ถ้าเป็นรูปภาพอยู่แล้ว ก็เปลี่ยนไปรูปถัดไป
+                changeBackground();
+            }
         });
+
     </script>
 </body>
 </html>
