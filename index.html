@@ -33,7 +33,7 @@
             position: relative;
             touch-action: manipulation;
             /* Added transition for a smooth background change */
-            transition: background-color 0.5s ease, background-image 0.5s ease;
+            transition: background-color 0.5s ease;
         }
         
         /* New CSS class for the background image mode */
@@ -42,6 +42,19 @@
             background-repeat: no-repeat;
             background-position: center;
             background-color: transparent; /* Set to transparent to show the image */
+        }
+        
+        /* New CSS pseudo-element to darken the background image without affecting UI */
+        body.darken-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            z-index: -1; /* Place it behind the UI content */
+            transition: background-color 0.5s ease;
         }
         
         /* New styling for the CG button */
@@ -326,6 +339,7 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
             box-shadow: 0 5px 10px rgba(0,0,0,0.3);
             position: relative;
+            transform: translateY(0);
         }
 
         .action-button:hover {
@@ -799,55 +813,60 @@
         createButtons('player1');
         createButtons('player2');
 
-        // --- New Background Toggle Logic ---
+        // --- New Background Toggle Logic with brightness adjustment ---
         const cgButton = document.getElementById('cg-button');
         const body = document.body;
         
-        // อัปเดตรายการรูปภาพเพื่อรวมรูปภาพที่คุณอัปโหลดมาทั้งหมด 4 รูป
+        // Use correct file names from GitHub
         const backgroundImages = [
-            'image_43a6ee.png',
-            'image_433613.png',
-            'image_432eab.png',
-            'image_41e073.png'
+            'CothSS.jpg',
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg'
         ];
+        
+        // Define the base URL for the GitHub repository
+        const githubBaseUrl = 'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/';
         
         let currentImageIndex = 0;
         
         function changeBackground() {
-            // Check if we have any images to cycle through
             if (backgroundImages.length === 0) {
                 console.error("No background images available.");
                 return;
             }
 
-            // Get the URL for the next image
-            const imageUrl = backgroundImages[currentImageIndex];
-            
-            // Create a temporary Image object to check if the URL is valid
+            const imageUrl = githubBaseUrl + backgroundImages[currentImageIndex];
             const img = new Image();
             
             img.onload = () => {
-                // Image loaded successfully, apply it as the background
+                // Apply the background image
                 body.style.backgroundImage = `url('${imageUrl}')`;
+                
+                // Add the background-image-mode class to set the background
                 body.classList.add('background-image-mode');
                 
-                // Move to the next image in the array
+                // Check if the current image needs dimming
+                const needsDarkening = backgroundImages[currentImageIndex].startsWith('image');
+                
+                if (needsDarkening) {
+                    body.classList.add('darken-background');
+                } else {
+                    body.classList.remove('darken-background');
+                }
+                
                 currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
             };
             
             img.onerror = () => {
-                // Image failed to load, log the error and try the next one
                 console.error(`Failed to load image: ${imageUrl}`);
-                
-                // Show a temporary message to the user
                 showMessage("Failed to load image. Trying the next one...", 3000);
-
-                // Move to the next image and try again
+                
                 currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
-                changeBackground(); // Recursive call to try the next image
+                changeBackground();
             };
             
-            // Set the source of the Image object to start the loading process
             img.src = imageUrl;
         }
 
