@@ -32,6 +32,45 @@
             box-sizing: border-box;
             position: relative;
             touch-action: manipulation;
+            /* Added transition for a smooth background change */
+            transition: background-color 0.5s ease, background-image 0.5s ease;
+        }
+        
+        /* New CSS class for the background image mode */
+        body.background-image-mode {
+            background-image: url('CothSS.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent; /* Set to transparent to show the image */
+        }
+        
+        /* New styling for the CG button */
+        .cg-button {
+            position: absolute;
+            top: 2vh;
+            left: 2vw;
+            width: 8vmin;
+            height: 8vmin;
+            border-radius: 50%;
+            background-color: #FFD700;
+            color: black;
+            font-size: 3vmin;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 1000; /* Ensure it's on top of other elements */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .cg-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .cg-button:focus {
+            outline: none;
         }
         
         /* Container for each player's side */
@@ -357,6 +396,9 @@
     </style>
 </head>
 <body>
+    <!-- New CG button at the top-left corner -->
+    <button id="cg-button" class="cg-button">CG</button>
+
     <div class="frame-score-container">
         <div class="frame-header">FRAME</div>
         <div class="frame-score-wrapper">
@@ -757,6 +799,15 @@
         
         createButtons('player1');
         createButtons('player2');
+
+        // --- New Background Toggle Logic ---
+        const cgButton = document.getElementById('cg-button');
+        const body = document.body;
+
+        cgButton.addEventListener('click', () => {
+            // This single line of code toggles the class, switching the background
+            body.classList.toggle('background-image-mode');
+        });
     </script>
 </body>
 </html>
