@@ -281,7 +281,7 @@
             /* Enhanced 3D effect */
             box-shadow: 
                 0 0 10px rgba(255, 255, 255, 0.2), 
-                0 8px 15px rgba(0, 0, 0, 0.6),   
+                0 8px 15px rgba(0, 0, 0, 0.6), 
                 inset 0 0 15px rgba(0, 0, 0, 0.2); 
             
             text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
@@ -803,38 +803,64 @@
         const cgButton = document.getElementById('cg-button');
         const body = document.body;
         
-        // **ส่วนแก้ไข**:
-        // 1. สร้างอาร์เรย์ของ URL รูปภาพที่คุณต้องการ
         const backgroundImages = [
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/CothSS.jpg',
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_43a6ee.png',
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_433613.png',
             'https://raw.githubusercontent.com/porice-star/SSC_V2/main/Background/image_432eab.png',
-            // เพิ่ม URL ของรูปภาพอื่นๆ ที่คุณต้องการที่นี่
         ];
         
-        // 2. ตัวแปรเพื่อติดตามรูปภาพปัจจุบัน
         let currentImageIndex = 0;
         
-        // 3. ฟังก์ชันสำหรับเปลี่ยนพื้นหลัง
         function changeBackground() {
-            // ตั้งค่าพื้นหลังเป็นรูปภาพในอาร์เรย์ที่ตำแหน่งปัจจุบัน
-            body.style.backgroundImage = `url('${backgroundImages[currentImageIndex]}')`;
-            body.classList.add('background-image-mode');
+            // Check if we have any images to cycle through
+            if (backgroundImages.length === 0) {
+                console.error("No background images available.");
+                return;
+            }
+
+            // Get the URL for the next image
+            const imageUrl = backgroundImages[currentImageIndex];
             
-            // เพิ่มค่า index สำหรับรูปถัดไป และวนกลับไป 0 ถ้าถึงรูปสุดท้ายแล้ว
-            currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+            // Create a temporary Image object to check if the URL is valid
+            const img = new Image();
+            
+            img.onload = () => {
+                // Image loaded successfully, apply it as the background
+                body.style.backgroundImage = `url('${imageUrl}')`;
+                body.classList.add('background-image-mode');
+                
+                // Move to the next image in the array
+                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+            };
+            
+            img.onerror = () => {
+                // Image failed to load, log the error and try the next one
+                console.error(`Failed to load image: ${imageUrl}`);
+                
+                // Show a temporary message to the user
+                showMessage("Failed to load image. Trying the next one...", 3000);
+
+                // Move to the next image and try again
+                currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+                changeBackground(); // Recursive call to try the next image
+            };
+            
+            // Set the source of the Image object to start the loading process
+            img.src = imageUrl;
         }
 
-        // 4. แก้ไขปุ่ม CG ให้เรียกใช้ฟังก์ชัน changeBackground()
+        function showMessage(message, duration) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
+        }
+
         cgButton.addEventListener('click', () => {
-            // ถ้าพื้นหลังยังไม่ได้เป็นรูปภาพ ให้เริ่มเปลี่ยนรูปภาพแรก
-            if (!body.classList.contains('background-image-mode')) {
-                changeBackground();
-            } else {
-                // ถ้าเป็นรูปภาพอยู่แล้ว ก็เปลี่ยนไปรูปถัดไป
-                changeBackground();
-            }
+            changeBackground();
         });
 
     </script>
